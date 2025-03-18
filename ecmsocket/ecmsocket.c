@@ -8,7 +8,6 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -17,7 +16,7 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 480
 
-//To get the follow parameters, run the fbset -i command.
+// To get the follow parameters, run the fbset -i command.
 #ifndef SCREEN_XRES
 #define SCREEN_XRES	1920
 #endif
@@ -33,8 +32,6 @@
 #ifndef SCREEN_LINE_LEN
 #define SCREEN_LINE_LEN		3840
 #endif
-
-	
 
 //#define DEBUG     //uncomment for debug output
 
@@ -59,19 +56,6 @@ static volatile int running = 1;
 void handle_signal(int signal) {
     running = 0;
 }
-
-void hide_cursor(uint16_t *fb, int x, int y, int width, int height, uint16_t bg_color, struct fb_var_screeninfo vinfo, struct fb_fix_screeninfo finfo) {
-    for (int row = y; row < y + height; row++) {
-        for (int col = x; col < x + width; col++) {
-            if (col >= 0 && col < vinfo.xres && row >= 0 && row < vinfo.yres) {
-                long location = (col * (vinfo.bits_per_pixel / 8)) + (row * finfo.line_length);
-                uint16_t *pixel = (uint16_t *)((uint8_t *)fb + location);
-                *pixel = bg_color;
-            }
-        }
-    }
-}
-
 
 void set_pixel(uint16_t *fb, int x, int y, uint16_t color, struct fb_var_screeninfo vinfo, struct fb_fix_screeninfo finfo) {
 
@@ -190,8 +174,6 @@ int main() {
 
            	 if (type == PKT_TYPE_FILLBLANK) {
                 	memset(framebuffer, 0x0000, screensize); // Blank screen
-			hide_cursor(framebuffer, 10, 10, 10, 10, 0x0000, vinfo, finfo);
-
 
             	} else if (type == PKT_TYPE_SETPIXEL) {
                 
@@ -202,27 +184,22 @@ int main() {
 
             	} else if (type == PKT_TYPE_FILLRED) {
             		fill_screen(framebuffer, screensize, RED_RGB565);      // Fill screen with Red
-			hide_cursor(framebuffer, 10,10, 10, 10, RED_RGB565, vinfo, finfo);
 
            	} else if (type == PKT_TYPE_FILLGREEN) {
                 	// Fill screen with Green
                 	fill_screen(framebuffer, screensize, GREEN_RGB565);
-			hide_cursor(framebuffer, 10,10, 10, 10, GREEN_RGB565, vinfo, finfo);
 
             	} else if (type == PKT_TYPE_FILLBLUE) {
                 	// Fill screen with Blue
                 	fill_screen(framebuffer, screensize, BLUE_RGB565);
-			hide_cursor(framebuffer, 10, 10, 10, 10, BLUE_RGB565, vinfo, finfo);
 
             	} else if (type == PKT_TYPE_FILLWHITE) {
                 	// Fill screen with White
                 	fill_screen(framebuffer, screensize, WHITE_RGB565);
-			hide_cursor(framebuffer, 10, 10, 10, 10, WHITE_RGB565, vinfo, finfo);
 
             	} else if (type == PKT_TYPE_FILLCOLOUR) {
                 	// Fill screen with White
                 	fill_screen(framebuffer, screensize, colour);
-			hide_cursor(framebuffer, 10, 10, 10, 10, colour, vinfo, finfo);
 
             	}
 
