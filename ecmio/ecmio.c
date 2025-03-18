@@ -10,6 +10,7 @@
 #define CLOCK_PIN 26              // Rising edge triggers read
 #define ACK_PIN 11                // Rising edge after each read
 #define START_PIN 9               // Low to start, High to stop
+#define STATUS_PINS {0, 2, 3}     // Status outputs (0 is LSB)
 #define SERVER_IP "127.0.0.1"     // Localhost
 #define SERVER_PORT 5000          // TCP Port
 
@@ -38,8 +39,9 @@ void send_packet(uint8_t *packet) {
 
 int main() {
     struct gpiod_chip *chip;
-    struct gpiod_line *data_lines[4], *clock, *ack, *start;
+    struct gpiod_line *data_lines[4], *clock, *ack, *start, *status_lines;
     int data_pins[] = DATA_PINS;
+    int status_pins[] = STATUS_PINS;
     uint8_t packet[7];
     
     // Open GPIO chip
@@ -53,6 +55,12 @@ int main() {
     for (int i = 0; i < 4; i++) {
         data_lines[i] = gpiod_chip_get_line(chip, data_pins[i]);
         gpiod_line_request_input(data_lines[i], "gpio_reader");
+    }
+
+    // Set status input lines
+    for (int i = 0; i < 3; i++) {
+        status_lines[i] = gpiod_chip_get_line(chip, status_pins[i]);
+        gpiod_line_request_output(data_lines[i], "gpio_reader");
     }
 
     // Get control lines
@@ -77,15 +85,21 @@ int main() {
         for (int byte = 0; byte < 7; byte++) {
             uint8_t value = 0;
 
+            // Get data input lines
+            for (int i = 0; i < 4; i++) {
+                data_lines[i] = gpiod_chip_get_line(chip, data_pins[i]);
+                gpiod_line_request_input(data_lines[i], "gpio_reader");
+        }
+
             for (int bit = 0; bit < 2; bit++) {  // 4-bit values, two per byte
                 while (gpiod_line_get_value(clock) == 0); // Wait for rising edge
                 usleep(10);  // Small delay for stability
 
 		printf("clk\n\r");
 
-                int read_value = 0;
-                for (int i = 0; i < 4; i++) {
-                    read_value |= gpiod_line_get_value(data_lines[i]) << i;
+                //Set Status bits
+                for (int i = 0; i < 3; i++) {
+                    gpiod_line_set_value(status_lines[i], ((byte >> i) & 0x01));
                 }
 
                 value |= (read_value << (bit * 4));
