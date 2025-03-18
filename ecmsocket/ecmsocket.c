@@ -13,25 +13,6 @@
 
 #define FRAMEBUFFER_DEVICE "/dev/fb0" // Framebuffer device
 #define PORT 5000 // Listening port
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 480
-
-// To get the follow parameters, run the fbset -i command.
-#ifndef SCREEN_XRES
-#define SCREEN_XRES	1920
-#endif
-
-#ifndef SCREEN_YRES
-#define SCREEN_YRES	1080
-#endif
-
-#ifndef SCREEN_PIXEL_BITS
-#define SCREEN_PIXEL_BITS	16
-#endif
-
-#ifndef SCREEN_LINE_LEN
-#define SCREEN_LINE_LEN		3840
-#endif
 
 //#define DEBUG     //uncomment for debug output
 
@@ -58,16 +39,20 @@ void handle_signal(int signal)
     running = 0;
 }
 
-void set_pixel(uint16_t *fb, int x, int y, uint16_t color,
-               struct fb_var_screeninfo vinfo, struct fb_fix_screeninfo finfo)
+void setup_signal_handler()
 {
+    struct sigaction sa;
+    sa.sa_handler = handle_signal;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+}
 
-    //printf("x %d, y %d, vinfo.xres %d, vinfo.yres %d,vinfo.bits_per_pixel %d, finfo.line_length %d\n\r", x,y, vinfo.xres, vinfo.yres,vinfo.bits_per_pixel, finfo.line_length);
-
-
-    if (x >= 0 && x < SCREEN_XRES && y >= 0 && y < SCREEN_YRES) {
-        long location = (x * (SCREEN_PIXEL_BITS / 8)) + (y * SCREEN_LINE_LEN);
-        //uint16_t *pixel = (uint16_t *)((uint8_t *)fb + location);
+void set_pixel(uint16_t *fb, int x, int y, uint16_t color,
+               struct fb_var_screeninfo *vinfo, struct fb_fix_screeninfo *finfo)
+{
+    if (x >= 0 && x < vinfo->xres && y >= 0 && y < vinfo->yres) {
+        long location = (x * (vinfo->bits_per_pixel / 8)) + (y * finfo->line_length);
         uint16_t *pixel = (uint16_t *)((uint8_t *)fb + location);
         *pixel = color;
     }
@@ -99,8 +84,7 @@ int main(void)
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    // Handle Ctrl+C to stop the program
-    signal(SIGINT, handle_signal);
+    setup_signal_handler();
 
     // Open framebuffer device
     fb_fd = open(FRAMEBUFFER_DEVICE, O_RDWR);
@@ -115,6 +99,7 @@ int main(void)
         close(fb_fd);
         return 1;
     }
+    printf("vinfo.xres %d, vinfo.yres %d,vinfo.bits_per_pixel %d, finfo.line_length %d\n\r", vinfo.xres, vinfo.yres,vinfo.bits_per_pixel, finfo.line_length);
 
     screensize = vinfo.yres_virtual * finfo.line_length;
 
@@ -170,8 +155,7 @@ int main(void)
         while (running) {
             ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer), 0);
             if (bytes_read == sizeof(buffer)) {
-
-		// Extract type, x,y,colour from packet
+                // Extract type, x,y , colour from packet
             	uint8_t type = buffer[0];
             	int x = buffer[1] | (buffer[2] << 8);
             	int y = buffer[3] | (buffer[4] << 8);
@@ -184,7 +168,7 @@ int main(void)
 #ifdef DEBUG
                 	printf("Received: Type=%d, X=%d, Y=%d, Color=0x%04X\n", type, x, y, colour);
 #endif
-                	set_pixel(framebuffer, x, y, colour, vinfo, finfo);
+                	set_pixel(framebuffer, x, y, colour, &vinfo, &finfo);
 
             	} else if (type == PKT_TYPE_FILLRED) {
                     // Fill screen with Red
