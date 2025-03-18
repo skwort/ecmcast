@@ -26,17 +26,17 @@ BIN = $(BIN_DIR)/$(TARGET)
 
 # Create build directories if they don't exist
 $(OBJ_DIR) $(BIN_DIR):
-        mkdir -p $(OBJ_DIR) $(BIN_DIR)
+	mkdir -p $(OBJ_DIR) $(BIN_DIR)
 
 # Build the executable
 all: $(OBJ_DIR) $(BIN_DIR) $(BIN)
 
 $(BIN): $(OBJ)
-        $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OBJ): ecmio.c | $(OBJ_DIR)
-        $(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean build files
 clean:
-        rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
