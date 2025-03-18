@@ -10,7 +10,7 @@
 #define CLOCK_PIN 26              // Rising edge triggers read
 #define ACK_PIN 11                // Rising edge after each read
 #define START_PIN 9               // Low to start, High to stop
-#define STATUS_PINS {0, 2, 3}     // Status outputs (0 is LSB)
+#define STATUS_PINS {2, 3, 4}     // Status outputs (2 is LSB)
 #define SERVER_IP "127.0.0.1"     // Localhost
 #define SERVER_PORT 5000          // TCP Port
 
