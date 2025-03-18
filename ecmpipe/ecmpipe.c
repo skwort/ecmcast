@@ -9,6 +9,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 //#define DEBUG     //uncomment for debug output
 
