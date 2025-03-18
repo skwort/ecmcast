@@ -39,7 +39,7 @@ void send_packet(uint8_t *packet) {
 
 int main() {
     struct gpiod_chip *chip;
-    struct gpiod_line *data_lines[4], *clock, *ack, *start, *status_lines;
+    struct gpiod_line *data_lines[4], *clock, *ack, *start, *status_lines[4];
     int data_pins[] = DATA_PINS;
     int status_pins[] = STATUS_PINS;
     uint8_t packet[7];
@@ -60,7 +60,7 @@ int main() {
     // Set status input lines
     for (int i = 0; i < 3; i++) {
         status_lines[i] = gpiod_chip_get_line(chip, status_pins[i]);
-        gpiod_line_request_output(data_lines[i], "gpio_reader");
+        gpiod_line_request_output(data_lines[i], "gpio_reader", 0);
     }
 
     // Get control lines
@@ -102,7 +102,6 @@ int main() {
                     gpiod_line_set_value(status_lines[i], ((byte >> i) & 0x01));
                 }
 
-                value |= (read_value << (bit * 4));
 		printf("val %X\n\r", value);
 
                 // Toggle ACK_PIN high then low
