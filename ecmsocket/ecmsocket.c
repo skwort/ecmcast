@@ -53,11 +53,14 @@
 
 static volatile int running = 1;
 
-void handle_signal(int signal) {
+void handle_signal(int signal)
+{
     running = 0;
 }
 
-void set_pixel(uint16_t *fb, int x, int y, uint16_t color, struct fb_var_screeninfo vinfo, struct fb_fix_screeninfo finfo) {
+void set_pixel(uint16_t *fb, int x, int y, uint16_t color,
+               struct fb_var_screeninfo vinfo, struct fb_fix_screeninfo finfo)
+{
 
     //printf("x %d, y %d, vinfo.xres %d, vinfo.yres %d,vinfo.bits_per_pixel %d, finfo.line_length %d\n\r", x,y, vinfo.xres, vinfo.yres,vinfo.bits_per_pixel, finfo.line_length);
 
@@ -77,16 +80,17 @@ void set_pixel(uint16_t *fb, int x, int y, uint16_t color, struct fb_var_screeni
  * @param screensize 
  * @param colour 
  */
-void fill_screen(uint16_t *framebuffer, size_t screensize, uint16_t colour) {
-
+void fill_screen(uint16_t *framebuffer, size_t screensize, uint16_t colour)
+{
     unsigned long count;
     
-    for (count = 0; count < ((screensize/2)); count++) {
-        *(framebuffer+count) = colour;
+    for (count = 0; count < (screensize / 2); count++) {
+        *(framebuffer + count) = colour;
     }
 }
 
-int main() {
+int main(void)
+{
     int fb_fd, server_fd, client_fd;
     struct fb_var_screeninfo vinfo;
     struct fb_fix_screeninfo finfo;
@@ -105,7 +109,8 @@ int main() {
         return 1;
     }
 
-    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &vinfo) || ioctl(fb_fd, FBIOGET_FSCREENINFO, &finfo)) {
+    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &vinfo) ||
+        ioctl(fb_fd, FBIOGET_FSCREENINFO, &finfo)) {
         perror("Failed to get screen info");
         close(fb_fd);
         return 1;
@@ -172,20 +177,20 @@ int main() {
             	int y = buffer[3] | (buffer[4] << 8);
             	uint16_t colour = buffer[5] | (buffer[6] << 8);
 
-           	 if (type == PKT_TYPE_FILLBLANK) {
+                if (type == PKT_TYPE_FILLBLANK) {
                 	memset(framebuffer, 0x0000, screensize); // Blank screen
 
             	} else if (type == PKT_TYPE_SETPIXEL) {
-                
 #ifdef DEBUG
                 	printf("Received: Type=%d, X=%d, Y=%d, Color=0x%04X\n", type, x, y, colour);
 #endif
                 	set_pixel(framebuffer, x, y, colour, vinfo, finfo);
 
             	} else if (type == PKT_TYPE_FILLRED) {
-            		fill_screen(framebuffer, screensize, RED_RGB565);      // Fill screen with Red
+                    // Fill screen with Red
+            		fill_screen(framebuffer, screensize, RED_RGB565);
 
-           	} else if (type == PKT_TYPE_FILLGREEN) {
+                } else if (type == PKT_TYPE_FILLGREEN) {
                 	// Fill screen with Green
                 	fill_screen(framebuffer, screensize, GREEN_RGB565);
 
@@ -198,9 +203,8 @@ int main() {
                 	fill_screen(framebuffer, screensize, WHITE_RGB565);
 
             	} else if (type == PKT_TYPE_FILLCOLOUR) {
-                	// Fill screen with White
+                	// Fill screen with Colour 
                 	fill_screen(framebuffer, screensize, colour);
-
             	}
 
             } else if (bytes_read <= 0) {
