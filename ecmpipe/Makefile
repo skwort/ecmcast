@@ -3,10 +3,10 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2
 
 # Target executable
-TARGET = pipe2fb #framebuffer_pixel
+TARGET = ecmpipe #framebuffer_pixel
 
 # Source files
-SRCS = pipe2fb.c #$(wildcard *.c)
+SRCS = ecmpipe.c #$(wildcard *.c)
 
 # Object files
 OBJS = $(SRCS:.c=.o)

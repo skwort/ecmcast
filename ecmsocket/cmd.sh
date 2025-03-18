@@ -1,1 +1,0 @@
-echo -n -e '\x01\x50\x02\x50\x01\x00\x1F' | nc localhost 5000
